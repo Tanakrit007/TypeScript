@@ -64,6 +64,11 @@ var Order = /** @class */ (function () {
     Order.prototype.getPayment = function () {
         return this.payment;
     };
+    Order.prototype.printOrderDetails = function () {
+        for (var i = 0; i < this.orderDetails.length; i++) {
+            this.orderDetails[i].printDetail();
+        }
+    };
     return Order;
 }());
 var OrderDetail = /** @class */ (function () {
@@ -84,6 +89,9 @@ var OrderDetail = /** @class */ (function () {
         }
         return 0;
     };
+    OrderDetail.prototype.printDetail = function () {
+        console.log(this.item.getName() + "\t", this.quantity + "(ชิ้น)\t" + this.calcSubTotal() + "฿");
+    };
     return OrderDetail;
 }());
 var Item = /** @class */ (function () {
@@ -103,6 +111,9 @@ var Item = /** @class */ (function () {
     };
     Item.prototype.inStock = function () {
         return true;
+    };
+    Item.prototype.getName = function () {
+        return this.description;
     };
     Item.prototype.getInfo = function () {
         return "Name:" + this.description + ", Price:" + this.price + "฿, Weigth:" + this.shippingWeight + " kg.";
@@ -173,7 +184,7 @@ var order1 = new Order(customer1, "16/12/2567", "in progress");
 //orderdetail
 var orderdetail1 = new OrderDetail(item1, 1, "not included");
 var orderdetail2 = new OrderDetail(item2, 2, "not included");
-var orderdetail3 = new OrderDetail(item1, 2, "not included");
+var orderdetail3 = new OrderDetail(item3, 2, "not included");
 //orderdetail => order
 order1.addOrderDetails(orderdetail1);
 order1.addOrderDetails(orderdetail2);
@@ -181,6 +192,9 @@ order1.addOrderDetails(orderdetail3);
 //payment
 var amount = order1.calcTotal();
 var cash = new Cash(amount, 1000);
+order1.printOrderDetails();
 order1.payOrder(cash);
+console.log("Vat: " + (order1.calcSubtotal)() + "฿");
+console.log("Total: " + order1.getPayment().getCashTendered());
 console.log("Recieve: " + order1.getPayment().getCashTendered());
 console.log("Change:" + order1.getPayment().getChange() + "฿");
