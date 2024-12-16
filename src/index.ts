@@ -1,139 +1,223 @@
 class Customer {
-    public name: string;
-    public address: string;
-  
-    constructor(name: string, address: string) {
-      this.name = name;
-      this.address = address;
+    private name:string;
+    private address:string;
+
+    constructor (name:string, address:string){
+        this.name = name;
+        this.address = address;
     }
-  }
-  
-  class Item {
-    private shippingWeight: number;
-    private description: string;
-  
-    constructor(shippingWeight: number, description: string) {
-      this.shippingWeight = shippingWeight;
-      this.description = description;
+
+    public getInfo():string{
+        return "Name: "+ this.name + "\nAddress: "+ this.address;
     }
-  
-    public getPriceForQuantity(): number {
-      return 0;
+}
+
+class Order {
+    private customer: Customer;
+    private orderDetails: OrderDetail[]=[];
+    private payment: Payment=new Cash(0,0);
+    private date: string;
+    private status: string;
+
+    constructor(customer: Customer,date: string,status:string){
+        this.customer = customer;
+        this.date = date;
+        this.status = status;
     }
-  
-    public getTax(): number {
-      return 0;
+    public calcSubtotal(){
+        let subtotal = 0;
+        for(let i = 0; i <this.orderDetails.length;i++){
+            subtotal = subtotal + this.orderDetails[i].calcSubTotal();
+        }
+        return subtotal;
     }
-  
-    public inStock(): boolean {
-      return false;
+
+    public calcTax(){
+        let vat = 0;
+        for(let i = 0; i <this.orderDetails.length;i++){
+            vat = vat + this.orderDetails[i].calcTax();
+        }
+        return vat;
     }
-  }
-  
-  class OrderDetail {
+    public calcTotal(){
+        return this.calcSubtotal() + this.calcTax();
+    }
+    public calcTotalWeight(){
+        let weight = 0
+        for(let i = 0; i <this.orderDetails.length;i++){
+            weight = weight + this.orderDetails[i].calcWeight();
+        }
+        return weight;
+    }
+    public addOrderDetails(orderDetails: OrderDetail){
+    this.orderDetails.push(orderDetails)
+    }
+    public payOrder(payment: Payment){
+    this.payment=payment
+    }
+    public getPayment():Payment{
+        return this.payment;
+    }
+    public printOrderDetails():void{
+      for(let i=0 ; i<this.orderDetails.length; i++){
+        this.orderDetails[i].printDetail();
+      }
+    }
+}
+
+class OrderDetail{
+    private item: Item;
     private quantity: number;
     private taxStatus: string;
-  
-    constructor(quantity: number, taxStatus: string) {
-      this.quantity = quantity;
-      this.taxStatus = taxStatus;
+    constructor(item: Item,quantity: number,taxStatus: string){
+    this.item = item;
+    this.quantity = quantity;
+    this.taxStatus = taxStatus;
     }
-  
-    public calcSubTotal(): number {
-      return 0;
+
+    public calcSubTotal(){
+        return this.quantity*this.item.getPriceForQuantity();
     }
-  
-    public calcWeight(): number {
-      return 0;
+    public calcWeight(){
+        return this.quantity * this.item.getShippingWeight();
     }
-  
-    public calcTax(): number {
-      return 0;
+    public calcTax(){
+        if(this.taxStatus === "not included"){
+            return this.quantity * this.item.getTax();
+        }
+        return 0;
     }
-  }
-  
-  class Order {
-    public date: string; 
-    public status: string;
-    private orderDetails: OrderDetail[] = [];
-  
-    constructor(date: string, status: string) {
-      this.date = date;
-      this.status = status;
+    public printDetail():void{
+      console.log(this.item.getName() + "\t",this.quantity + "(ชิ้น)\t"+this.calcSubTotal()+"฿")
     }
-  
-    public calcSubTotal(): number {
-      return 0;
+}
+
+class Item {
+    private shippingWeight: number;
+    private description: string;
+    private price:number;
+
+    constructor(shippingWeight: number,description:string, price:number){
+        this.shippingWeight = shippingWeight;
+        this.price = price;
+        this.description = description;
     }
-  
-    public calcTax(): number {
-      return 0;
+    public getPriceForQuantity(){
+        return this.price;
     }
-  
-    public calcTotal(): number {
-      return 0;
+
+    public getTax(){
+        return this.price * 0.07;
     }
-  
-    public calcTotalWeight(): number {
-      return 0;
+
+    public getShippingWeight():number{
+        return this.shippingWeight;
     }
-  
-    public addOrderDetail(orderDetail: OrderDetail): void {
-      this.orderDetails.push(orderDetail);
+    public inStock(){
+        return true;
     }
-  }
-  
-  abstract class Payment {
-    protected amount: number;
-  
-    constructor(amount: number) {
-      this.amount = amount;
+    public getName(){
+      return this.description
     }
-  
-    public abstract authorized(): boolean;
-  }
-  
-  class Cash extends Payment {
+
+    public getInfo():string{
+        return "Name:"+ this.description+", Price:"+this.price +"฿, Weigth:"+this.shippingWeight+" kg.";
+    }
+}
+
+abstract class Payment{
+    private amount:number;
+
+    constructor(amount:number){
+        this.amount=amount;
+    }
+
+    public getAmount():number{
+        return this.amount;
+    }
+}
+class Check extends Payment {
+    private name:string;
+    private bankID:string;
+
+    constructor (name:string, bankID:string, amount:number){
+        super(amount)
+        this.name = name;
+        this.bankID = bankID;
+    }
+    public authorized(){
+
+    }
+}
+
+class Credit extends Payment {
+    private number:string;
+    private type:string;
+    private expDate:string;
+
+    constructor (number:string, type:string, amount:number, expDate:string){
+    super(amount)
+    this.number = number;
+    this.type = type;
+    this.expDate =expDate;
+    }
+    public authorized(){
+
+    }
+}
+
+class Cash extends Payment {
     private cashTendered: number;
-  
-    constructor(amount: number, cashTendered: number) {
-      super(amount);
-      this.cashTendered = cashTendered;
+
+    constructor(amount:number, cashTendered: number){
+        super(amount);
+        this.cashTendered = cashTendered;
     }
-  
-    public authorized(): boolean {
-      return true;
+    public getCashTendered(): number{
+        return this.cashTendered;
     }
-  }
-  
-  class Check extends Payment {
-    private name: string;
-    private bankID: string;
-  
-    constructor(amount: number, name: string, bankID: string) {
-      super(amount);
-      this.name = name;
-      this.bankID = bankID;
+    public getChange():number{
+        return this.cashTendered - this.getAmount();
     }
+}
+
+  //create object
+  const customer1 = new Customer("Luck", "85 malaiman road, NP");
+  console.log(customer1.getInfo());
+
+  //Items
+  const item1 = new Item(1.5, "water", 15)
+  console.log(item1.getInfo());
+
+  const item2 = new Item(0.05, "lays", 35)
+  console.log(item2.getInfo());
+
+  const item3 = new Item(0.8, "noodel", 10)
+  console.log(item3.getInfo());
+
+
+  //order
+  const order1 = new Order(customer1, "16/12/2567", "in progress");
+
+  //orderdetail
+  const orderdetail1 = new OrderDetail(item1,1,"not included");
+  const orderdetail2 = new OrderDetail(item2,2,"not included");
+  const orderdetail3 = new OrderDetail(item3,2,"not included");
+
+  //orderdetail => order
+  order1.addOrderDetails(orderdetail1);
+  order1.addOrderDetails(orderdetail2);
+  order1.addOrderDetails(orderdetail3);
+
+  //payment
+  const amount = order1.calcTotal();
+  const cash = new Cash(amount, 1000);
+  order1.printOrderDetails();
+  order1.payOrder(cash);
   
-    public authorized(): boolean {
-      return true;
-    }
-  }
+  console.log("Vat: "+ (order1.calcSubtotal)() + "฿" );
+  console.log("Total: "+ (order1.getPayment() as Cash).getCashTendered());
+  console.log("Recieve: "+ (order1.getPayment() as Cash).getCashTendered());
+  console.log("Change:" + (order1.getPayment() as Cash).getChange()+"฿");
   
-  class Credit extends Payment {
-    private number: string;
-    private type: string;
-    private expDate: string; // เปลี่ยนจาก Date เป็น string
   
-    constructor(amount: number, number: string, type: string, expDate: string) {
-      super(amount);
-      this.number = number;
-      this.type = type;
-      this.expDate = expDate;
-    }
-  
-    public authorized(): boolean {
-      return true;
-    }
-  }
